@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 
+
 void main() {
   runApp(MyApp());
 }
@@ -167,20 +168,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // photo grid
           buildTabBar(),
           if (_tabController.index == 0)
-            FutureBuilder<Widget>(
-                future: _showMyPhotos(),
-                builder: (context, AsyncSnapshot<Widget> snapshot) {
-                  if (snapshot.hasData) {
-                    return snapshot.data;
-                  } else {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 64.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                }
-            ),
-
+            _loadImages(0, 100),
         ]
         ,),
 
@@ -359,31 +347,54 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Future<Widget> _showMyPhotos() async {
+  FutureBuilder<Widget> _loadImages(int from, int to) {
+    return FutureBuilder<Widget>(
+        future: _showMyPhotos(0, 100),
+        builder: (context, AsyncSnapshot<Widget> snapshot) {
+          if (snapshot.hasData) {
+            return snapshot.data;
+          } else {
+            return Padding(
+              padding: const EdgeInsets.only(top: 64.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+        }
+    );
+  }
+
+  Future<Widget> _showMyPhotos(int from, int to) async {
     var result = await PhotoManager.requestPermission();
     if (result) {
       // get albums
       List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
-      print(list);
       // 1st album in the list, typically the "Recent" or "All" album
+      List<AssetEntity> imageList;
       for (var album in list) {
         if (album.name == "Camera") {
           AssetPathEntity data = album;
-          List<AssetEntity> imageList = await data.assetList;
-          for (int i = 0; i < imageList.length; i++) {
+          imageList = await data.assetList;
+          for (int i = from; i < to; i++) {
+            AssetEntity entity = imageList[i];
+            var width = entity.width;
+            var height = entity.height;
+            var aspectRatio = height / width;
+            int newHeight = (aspectRatio * 256).round();
             File file = await imageList[i].file;
             _images.add(Image(fit: BoxFit.cover,
                 image: ResizeImage(
                     FileImage(
-                        file), width: 500, height: 667, allowUpscaling: false
+                        file), width: 256, height: newHeight, allowUpscaling: false
                 )
             ));
           }
           return GridView.builder(
             shrinkWrap: true,
-            physics: ScrollPhysics(),
+            physics: NeverScrollableScrollPhysics(),
             primary: false,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
                 crossAxisCount: 3),
             itemCount: _images.length,
             itemBuilder: (BuildContext context, int index) {
