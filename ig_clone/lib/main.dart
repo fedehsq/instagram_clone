@@ -4,8 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 
-
-
 void main() {
   runApp(MyApp());
 }
@@ -63,9 +61,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   File _image;
-  final picker = ImagePicker();
-  bool showStory = false;
-
+  final _picker = ImagePicker();
+  bool _showStory = false;
+  final _images = [];
 
   TabController _tabController;
 
@@ -91,8 +89,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Widget _buildDoubleText(String one, String two) {
     return Column(
       children: [
-        Text(
-          one,
+        Text(one,
           style: (TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold
           )
@@ -165,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // set story info
           _setStoryInfo(),
           // display stories in evidence
-          if (showStory)
+          if (_showStory)
             _showStories(),
           // photo grid
           buildTabBar(),
@@ -243,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   // read image from internal storage! i love android
   Future getImage() async {
-    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
@@ -350,11 +347,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               constraints: BoxConstraints(),
               splashColor: Colors.transparent,
               highlightColor: Colors.transparent,
-              icon: !showStory ? Icon(Icons.keyboard_arrow_down) :
+              icon: !_showStory ? Icon(Icons.keyboard_arrow_down) :
               Icon(Icons.keyboard_arrow_up),
               onPressed: () {
                 setState(() {
-                  showStory = !showStory;
+                  _showStory = !_showStory;
                 });
               })
         ],
@@ -365,26 +362,33 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Future<Widget> _showMyPhotos() async {
     var result = await PhotoManager.requestPermission();
     if (result) {
-      List<Image> images = <Image>[];
       // get albums
       List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
+      print(list);
       // 1st album in the list, typically the "Recent" or "All" album
       for (var album in list) {
         if (album.name == "Camera") {
           AssetPathEntity data = album;
           List<AssetEntity> imageList = await data.assetList;
-          for (int i = 0; i < 10; i++) {
+          for (int i = 0; i < imageList.length; i++) {
             File file = await imageList[i].file;
-            images.add(Image(fit: BoxFit.cover, image: FileImage(file)));
+            _images.add(Image(fit: BoxFit.cover,
+                image: ResizeImage(
+                    FileImage(
+                        file), width: 500, height: 667, allowUpscaling: false
+                )
+            ));
           }
-          return GridView.count(
-            // Create a grid with 2 columns. If you change the scrollDirection to
-            // horizontal, this produces 2 rows.
-              crossAxisCount: 3,
-              shrinkWrap: true,
-              physics: ScrollPhysics(),
-              // Generate 100 widgets that display their index in the List.
-              children: images
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: ScrollPhysics(),
+            primary: false,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3),
+            itemCount: _images.length,
+            itemBuilder: (BuildContext context, int index) {
+              return _images[index];
+            },
           );
         }
       }
@@ -393,5 +397,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     }
     return Text("Error");
   }
+
 }
 
