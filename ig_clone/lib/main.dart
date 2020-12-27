@@ -372,7 +372,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       List<AssetEntity> imageList;
       AssetPathEntity data;
       for (var album in list) {
-        if (album.name == "WhatsApp Images") {
+        if (album.name == "Camera") {
           data = album;
           imageList = await data.assetList;
           return Expanded(
