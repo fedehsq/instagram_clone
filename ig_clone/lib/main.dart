@@ -370,35 +370,33 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       List<AssetPathEntity> list = await PhotoManager.getAssetPathList();
       // 1st album in the list, typically the "Recent" or "All" album
       List<AssetEntity> imageList;
+      AssetPathEntity data;
       for (var album in list) {
-        if (album.name == "Camera") {
-          AssetPathEntity data = album;
+        if (album.name == "WhatsApp Images") {
+          data = album;
           imageList = await data.assetList;
-          for (int i = 0; i < 100; i++) {
-            AssetEntity entity = imageList[i];
-            var width = entity.width;
-            var height = entity.height;
-            var aspectRatio = height / width;
-            int newHeight = (aspectRatio * 256).round();
-            File file = await imageList[i].file;
-            _images.add(Image(fit: BoxFit.cover,
-                image: ResizeImage(
-                    FileImage(
-                        file), width: 256, height: newHeight, allowUpscaling: false
-                )
-            ));
-          }
           return Expanded(
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisSpacing: 2,
                   mainAxisSpacing: 2,
                   crossAxisCount: 3),
-              itemCount: _images.length,
+              itemCount: imageList.length,
               itemBuilder: (BuildContext context, int index) {
-                print(index);
-
-                return _images[index];
+                return FutureBuilder<Widget>(
+                    future: _getImageFromInternalStorage(imageList, index),
+                    builder: (context, AsyncSnapshot<Widget> snapshot) {
+                      if (snapshot.hasData) {
+                        _images.add(snapshot.data);
+                        return snapshot.data;
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 64.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                    }
+                );
               },
             ),
           );
@@ -408,6 +406,22 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       PhotoManager.openSetting();
     }
     return Text("Error");
+  }
+
+  Future<Widget> _getImageFromInternalStorage(List<AssetEntity> imageList, int index) async {
+    AssetEntity entity = imageList[index];
+    var width = entity.width;
+    var height = entity.height;
+    var aspectRatio = height / width;
+    int newHeight = (aspectRatio * 256).round();
+    File file = await imageList[index].file;
+    return Image(fit: BoxFit.cover,
+        image: ResizeImage(
+            FileImage(
+                file
+            ), width: 256, height: newHeight, allowUpscaling: false
+        )
+    );
   }
 
 
