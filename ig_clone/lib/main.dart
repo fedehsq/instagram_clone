@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
+import 'AlbumImages.dart';
+import 'DisplayImage.dart';
 
+// camera images
+final cameraImages = [];
 
 void main() {
   runApp(MyApp());
@@ -21,7 +25,6 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark),
       theme: ThemeData(
         // This is the theme of your application.
-        //
 
         // Try running your application with "flutter run". You'll see the
         // application has a blue toolbar. Then, without quitting the app, try
@@ -61,13 +64,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+  // picked profile image
   File _image;
   final _picker = ImagePicker();
+  // flag tells evidence stories are to shown
   bool _showStory = false;
-  final _images = [];
-
+  // swipe between routes
   TabController _tabController;
 
+  // for controller
   @override
   void dispose() {
     _tabController.dispose();
@@ -87,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     }
   }
 
+  // concat two string: normal and bold
   Widget _buildDoubleText(String one, String two) {
     return Column(
       children: [
@@ -105,12 +111,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -167,14 +167,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             _showStories(),
           // photo grid
           buildTabBar(),
-          if (_tabController.index == 0)
-            _loadImages(),
+          _tabController.index == 0 ? loadCamera() : loadAlbum()
         ]
         ,),
 
     );
   }
 
+  // two routes: camera photo and all photos
   TabBar buildTabBar() {
     return TabBar(
           controller: _tabController,
@@ -185,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         );
   }
 
-
+  // display story if needed
   Widget _showStories() {
     return Padding(
         padding: const EdgeInsets.only(left: 8.0),
@@ -212,6 +212,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       );
   }
 
+  // button to add story
   ButtonTheme _addEvidenceStories(IconData add) {
     return ButtonTheme(
       height: 48,
@@ -226,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  // read image from internal storage! i love android
+  // pick image from internal storage to put in profile image
   Future getImage() async {
     final pickedFile = await _picker.getImage(source: ImageSource.gallery);
     setState(() {
@@ -238,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     });
   }
 
-  // build first line of prifile
+  // build first line of profile
   Widget _setImagePostFollower() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -287,6 +288,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  // concat two text of different style
   _setRichText(String s, String t) {
     return RichText(
       text: TextSpan(
@@ -303,6 +305,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  // modify button
   _setModifyButton() {
     return Padding(
         padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 16.0, right: 16.0),
@@ -319,6 +322,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  // display row with info about stories
   _setStoryInfo() {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
@@ -347,9 +351,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  FutureBuilder<Widget> _loadImages() {
+
+// task loading camera photos in first tab
+  FutureBuilder<Widget> loadCamera() {
     return FutureBuilder<Widget>(
-        future: _showMyPhotos(),
+        future: _showMyCamera(),
         builder: (context, AsyncSnapshot<Widget> snapshot) {
           if (snapshot.hasData) {
             return snapshot.data;
@@ -363,7 +369,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Future<Widget> _showMyPhotos() async {
+// load and display camera photo
+  Future<Widget> _showMyCamera() async {
     var result = await PhotoManager.requestPermission();
     if (result) {
       // get albums
@@ -378,16 +385,16 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           return Expanded(
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
-                  crossAxisCount: 3),
+                  crossAxisSpacing: 2, mainAxisSpacing: 2, crossAxisCount: 3
+              ),
               itemCount: imageList.length,
               itemBuilder: (BuildContext context, int index) {
+                // display progress bar until photo isn't loaded
                 return FutureBuilder<Widget>(
                     future: _getImageFromInternalStorage(imageList, index),
                     builder: (context, AsyncSnapshot<Widget> snapshot) {
                       if (snapshot.hasData) {
-                        _images.add(snapshot.data);
+                        cameraImages.add(snapshot.data);
                         return snapshot.data;
                       } else {
                         return Padding(
@@ -408,23 +415,135 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return Text("Error");
   }
 
+  // get image from camera
   Future<Widget> _getImageFromInternalStorage(List<AssetEntity> imageList, int index) async {
-    AssetEntity entity = imageList[index];
+    /*
     var width = entity.width;
     var height = entity.height;
     var aspectRatio = height / width;
     int newHeight = (aspectRatio * 256).round();
+    int newWidth = (256 / aspectRatio).round();
+    // width > height ? 256 : newWidth, height: height > width ? 256 : newHeight,
+    */
     File file = await imageList[index].file;
-    return Image(fit: BoxFit.cover,
-        image: ResizeImage(
-            FileImage(
-                file
-            ), width: 256, height: newHeight, allowUpscaling: false
-        )
+    if (file.path.endsWith("jpg") || file.path.endsWith("jpeg") ||
+        file.path.endsWith("png")) {
+      return InkWell(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  DisplayImage(
+                      image: FileImage(
+                          file
+                      )
+                  )
+          ));
+        },
+        child: Image(fit: BoxFit.fitWidth,
+            image: ResizeImage(
+                FileImage(
+                    file
+                ),
+                width: 250, allowUpscaling: false
+            )
+        ),
+      );
+    } else {
+      return Container(
+          color: Colors.red,
+          child: Center(
+              child: Text(
+                  "Not an Image!"
+              )
+          )
+      );
+    }
+  }
+
+  // task loading album in second tab
+  FutureBuilder<Widget> loadAlbum() {
+    return FutureBuilder<Widget>(
+        future: _showMyAlbums(),
+        builder: (context, AsyncSnapshot<Widget> snapshot) {
+          if (snapshot.hasData) {
+            return snapshot.data;
+          } else {
+            return Padding(
+              padding: const EdgeInsets.only(top: 64.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+        }
     );
   }
 
+// show album name as card in first tab
+  Future<Widget> _showMyAlbums() async {
+    var result = await PhotoManager.requestPermission();
+    if (result) {
+      // get albums
+      List<AssetPathEntity> album = await PhotoManager.getAssetPathList();
+      List<Card> mAlbum = [];
+      for (var album in album) {
+        mAlbum.add(
+            Card(
+              color: Colors.blue,
+              child: InkWell(
+                onTap: ()  {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) {
+                        return FutureBuilder<Widget>(
+                            future: _startRoute(album),
+                            builder: (context, AsyncSnapshot<Widget> snapshot) {
+                              if (snapshot.hasData) {
+                                return snapshot.data;
+                              } else {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              }
+                            }
+                        );
+                      })
+                  );
+                },
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.folder),
+                      Text(
+                        album.name,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+        );
+      }
+      return Expanded(
+        child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
+                crossAxisCount: 3),
+            itemCount: mAlbum.length,
+            itemBuilder: (BuildContext context, int index) {
+              return mAlbum[index];
+            }
+        ),
+      );
+    } else {
+      PhotoManager.openSetting();
+    }
+    return Text("Error");
+  }
 
-
+// open album tapped in new route AlbumImages.dart
+  Future<Widget> _startRoute(AssetPathEntity album) async {
+    var imageList = await album.assetList;
+    return AlbumImages(
+        images: imageList, album: album.name, size: album.assetCount);
+  }
 }
 
