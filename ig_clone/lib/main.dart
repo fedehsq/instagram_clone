@@ -151,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ],
         ),
       ),
-      body: ListView(
+      body: Column(
         //crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // row with image, post, follower
@@ -168,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // photo grid
           buildTabBar(),
           if (_tabController.index == 0)
-            _loadImages(0, 100),
+            _loadImages(),
         ]
         ,),
 
@@ -347,9 +347,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  FutureBuilder<Widget> _loadImages(int from, int to) {
+  FutureBuilder<Widget> _loadImages() {
     return FutureBuilder<Widget>(
-        future: _showMyPhotos(0, 100),
+        future: _showMyPhotos(),
         builder: (context, AsyncSnapshot<Widget> snapshot) {
           if (snapshot.hasData) {
             return snapshot.data;
@@ -363,7 +363,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Future<Widget> _showMyPhotos(int from, int to) async {
+  Future<Widget> _showMyPhotos() async {
     var result = await PhotoManager.requestPermission();
     if (result) {
       // get albums
@@ -374,7 +374,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         if (album.name == "Camera") {
           AssetPathEntity data = album;
           imageList = await data.assetList;
-          for (int i = from; i < to; i++) {
+          for (int i = 0; i < 100; i++) {
             AssetEntity entity = imageList[i];
             var width = entity.width;
             var height = entity.height;
@@ -388,18 +388,19 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 )
             ));
           }
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            primary: false,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
-                crossAxisCount: 3),
-            itemCount: _images.length,
-            itemBuilder: (BuildContext context, int index) {
-              return _images[index];
-            },
+          return Expanded(
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisSpacing: 2,
+                  mainAxisSpacing: 2,
+                  crossAxisCount: 3),
+              itemCount: _images.length,
+              itemBuilder: (BuildContext context, int index) {
+                print(index);
+
+                return _images[index];
+              },
+            ),
           );
         }
       }
@@ -408,6 +409,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     }
     return Text("Error");
   }
+
+
 
 }
 
