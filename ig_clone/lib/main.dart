@@ -109,6 +109,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+
+
+    /*
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,6 +176,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     );
   }
+
+     */
+
+
 
   // two routes: camera photo and all photos
   TabBar buildTabBar() {
@@ -379,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       List<AssetEntity> imageList;
       AssetPathEntity data;
       for (var album in list) {
-        if (album.name == "Camera") {
+        if (album.name == "Recents") {
           data = album;
           imageList = await data.assetList;
           return Expanded(
@@ -544,6 +551,88 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     var imageList = await album.assetList;
     return AlbumImages(
         images: imageList, album: album.name, size: album.assetCount);
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverAppBar(
+
+                  title: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Icon(
+                            Icons.lock_outline, size: 18
+                        ),
+                      ),
+                      Text(
+                          widget.title,
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down, size: 20,
+                      ),
+                      Icon(
+                        Icons.verified, size: 20, color: Colors.blue,
+                      ),
+                    ],
+                  ),
+                  expandedHeight: 300,
+                  floating: false,
+                  pinned: true,
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                          Icons.add, size: 32
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                          Icons.menu, size: 32
+                      ),
+                    )
+                  ],
+                  flexibleSpace: Padding(
+                    padding: const EdgeInsets.only(top: 128.0),
+                    child: FlexibleSpaceBar(
+                      background: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // row with image, post, follower
+                            _setImagePostFollower(),
+                            // description
+                            _setDescription(),
+                            // modify profile
+                            _setModifyButton(),
+                            // set story info
+                            _setStoryInfo(),
+                            // display stories in evidence
+                            if (_showStory)
+                              _showStories()
+                          ]),
+                    ),
+                  )
+              ),
+            ];
+          },
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // photo grid
+              buildTabBar(),
+              _tabController.index == 0 ? loadCamera() : loadAlbum()
+            ]
+            ,)
+      ),
+    );
   }
 }
 
