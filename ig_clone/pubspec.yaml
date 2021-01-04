@@ -30,9 +30,6 @@ dependencies:
   cupertino_icons: ^1.0.0
   image_picker: ^0.6.7+17
   photo_manager: ^0.5.8
-  image: ^2.1.19
-  multi_image_picker: ^4.6.5
-
 
 
 dev_dependencies:

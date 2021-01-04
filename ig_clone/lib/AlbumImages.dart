@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:ig_clone/DisplayImage.dart';
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -59,7 +58,7 @@ class _AlbumImagesState extends State<AlbumImages> {
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) =>
-                  DisplayImage(
+                  Image(
                       image: FileImage(
                           file
                       )

@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 import 'AlbumImages.dart';
-import 'DisplayImage.dart';
 
 // camera images
 final cameraImages = [];
@@ -109,29 +108,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-
-
-    /*
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-                Icons.add, size: 32
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-                Icons.menu, size: 32
-            ),
-          )
-        ],
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Row(
           children: [
             Padding(
@@ -153,31 +133,52 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             ),
           ],
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+                Icons.add, size: 32
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+                Icons.menu, size: 32
+            ),
+          )
+        ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // row with image, post, follower
-          _setImagePostFollower(),
-          // description
-          _setDescription(),
-          // modify profile
-          _setModifyButton(),
-          // set story info
-          _setStoryInfo(),
-          // display stories in evidence
-          if (_showStory)
-            _showStories(),
-          // photo grid
-          buildTabBar(),
-          _tabController.index == 0 ? loadCamera() : loadAlbum()
-        ]
-        ,),
-
+      body: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverList(
+                delegate: SliverChildListDelegate([
+                  // row with image, post, follower
+                  _setImagePostFollower(),
+                  // description
+                  _setDescription(),
+                  // modify profile
+                  _setModifyButton(),
+                  // set story info
+                  _setStoryInfo(),
+                  // display stories in evidence
+                  if (_showStory)
+                    _showStories()
+                ]),
+              )
+            ];
+          },
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // photo grid
+              buildTabBar(),
+              _tabController.index == 0 ? loadCamera() : loadAlbum()
+            ]
+            ,)
+      ),
     );
   }
-
-     */
 
 
 
@@ -253,7 +254,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       children: [
       IconButton(
         padding: EdgeInsets.zero,
-        iconSize: 80,
+        iconSize: 85,
         icon: _image == null ?
         Icon(
             Icons.circle
@@ -278,16 +279,28 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Federico Bernacca",
-            style: TextStyle(fontWeight: FontWeight.bold),),
-          Text("📍 Carrara"),
+          Padding(
+            padding: const EdgeInsets.only(top:4.0),
+            child: Text("Federico Bernacca",
+              style: TextStyle(fontWeight: FontWeight.bold),),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top:4.0),
+            child: Text("📍 Carrara"),
+          ),
           _setRichText("🎓 Informatica ", "@unipisa"),
           _setRichText("📚 Cybersecurity ", "@unipisa"),
-          Text("💻 { }"),
-          Text(
-            "github.com/fedehsq",
-            style: TextStyle(
-                color: Colors.blue
+          Padding(
+            padding: const EdgeInsets.only(top:4.0),
+            child: Text("💻 { }"),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(
+              "github.com/fedehsq",
+              style: TextStyle(
+                  color: Colors.blue
+              ),
             ),
           ),
         ],
@@ -297,17 +310,20 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   // concat two text of different style
   _setRichText(String s, String t) {
-    return RichText(
-      text: TextSpan(
-        text: s,
-        children: <TextSpan>[
-          TextSpan(
-              text: t,
-              style: TextStyle(
-                  color: Colors.blue
-              )
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: RichText(
+        text: TextSpan(
+          text: s,
+          children: <TextSpan>[
+            TextSpan(
+                text: t,
+                style: TextStyle(
+                    color: Colors.blue
+                )
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -386,7 +402,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       List<AssetEntity> imageList;
       AssetPathEntity data;
       for (var album in list) {
-        if (album.name == "Recents") {
+        if (album.name == "Camera") {
           data = album;
           imageList = await data.assetList;
           return Expanded(
@@ -439,7 +455,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) =>
-                  DisplayImage(
+                  Image(
                       image: FileImage(
                           file
                       )
@@ -554,85 +570,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: NestedScrollView(
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              SliverAppBar(
 
-                  title: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Icon(
-                            Icons.lock_outline, size: 18
-                        ),
-                      ),
-                      Text(
-                          widget.title,
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)
-                      ),
-                      Icon(
-                        Icons.keyboard_arrow_down, size: 20,
-                      ),
-                      Icon(
-                        Icons.verified, size: 20, color: Colors.blue,
-                      ),
-                    ],
-                  ),
-                  expandedHeight: 300,
-                  floating: false,
-                  pinned: true,
-                  actions: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                          Icons.add, size: 32
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                          Icons.menu, size: 32
-                      ),
-                    )
-                  ],
-                  flexibleSpace: Padding(
-                    padding: const EdgeInsets.only(top: 128.0),
-                    child: FlexibleSpaceBar(
-                      background: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // row with image, post, follower
-                            _setImagePostFollower(),
-                            // description
-                            _setDescription(),
-                            // modify profile
-                            _setModifyButton(),
-                            // set story info
-                            _setStoryInfo(),
-                            // display stories in evidence
-                            if (_showStory)
-                              _showStories()
-                          ]),
-                    ),
-                  )
-              ),
-            ];
-          },
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // photo grid
-              buildTabBar(),
-              _tabController.index == 0 ? loadCamera() : loadAlbum()
-            ]
-            ,)
-      ),
-    );
-  }
 }
 
